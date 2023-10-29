@@ -295,7 +295,7 @@ Afterwards I started process hacker with system privileges to get more insights.
 
 We can see we have only Query rights as administrator for the token, so we have to first find a token that is running as system in order to steal the token of the EventLog process.
 
-In order to steal a system token we first have to find a process that is running as system. Furthermore the DACL of this process needs to allow an local administrator to access the process with *PROCESS_QUERY_LIMITED_INFORMATION* that we do not have to enable the *SeDebugPrivilege*. The next step is that the process token needs to have a DACL that allows local Administrators to open the process token with *TOKEN_QUERY | TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE* access rights.
+In order to steal a system token we first have to find a process that is running as system. Furthermore the DACL of this process needs to allow an local administrator to access the process with *PROCESS_QUERY_LIMITED_INFORMATION* that we do not have to enable the *SeDebugPrivilege*. The next step is that the process token needs to have a DACL that allows local Administrators to open the process token with *TOKEN_QUERY AND TOKEN_ASSIGN_PRIMARY AND TOKEN_DUPLICATE* access rights.
 
 So lets search a process that meets this requirements.
 
@@ -315,7 +315,7 @@ HANDLE ImpersonateTokenofPID(DWORD dwPID) {
 		goto exit;
 	}
 
-	dwSuccess = OpenProcessToken(hProcess, TOKEN_QUERY | TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE, &hToken);
+	dwSuccess = OpenProcessToken(hProcess, TOKEN_QUERY AND TOKEN_ASSIGN_PRIMARY AND TOKEN_DUPLICATE, &hToken);
 	if (dwSuccess == FAIL) {
 		printf("[-] Could not open process token of PID: %d\n", dwPID);
 		goto exit;
@@ -570,7 +570,7 @@ We have one problem, we can not enumerate which of the *SYNCHRONIZE* handle matc
 
 So we need to clone all process handles with *SYNCHRONIZE* Access and check which of them is from the EventLog Process.
 
-For the Handle Evelation from the *SYNCHRONIZE* Handle to a Handle with *PROCESS_QUERY_INFORMATION | PROCESS_DUP_HANDLE* rights we need exactly the token of the EventLog Process.
+For the Handle Evelation from the *SYNCHRONIZE* Handle to a Handle with *PROCESS_QUERY_INFORMATION AND PROCESS_DUP_HANDLE* rights we need exactly the token of the EventLog Process.
 
 But how can we get the access token of the EventLog Process without opening the EventLog Process itself with an *OpenProcess* call?
 
@@ -755,7 +755,7 @@ exit:
 ```
 
 
-After a lot of tries we have an valid EventLog process token and we are able to elevate a *SYNCHRONIZE* handle to *PROCESS_QUERY_INFORMATION* | *PROCESS_DUP_HANDLE* if we get the right *SYNCHRONIZE* handle of the EventLog Process.
+After a lot of tries we have an valid EventLog process token and we are able to elevate a *SYNCHRONIZE* handle to *PROCESS_QUERY_INFORMATION* AND *PROCESS_DUP_HANDLE* if we get the right *SYNCHRONIZE* handle of the EventLog Process.
 
 
 For the bruteforce we either have to duplicate all RPCSs *SYNCHRONIZE* handles at once or step through them one by one.
